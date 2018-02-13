@@ -58,13 +58,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if random(min: 0, max: 2) > 1 {
             wall.anchorPoint = CGPoint(x: 0.0, y: 1.0)
             wall.position = CGPoint(x: frame.maxX, y: frame.maxY)
+            wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size, center: wall.anchorPoint)
+
         } else {
             wall.anchorPoint = CGPoint.zero
             wall.position = CGPoint(x: frame.maxX, y: frame.minY)
+            wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size, center: wall.anchorPoint)
         }
         
         //Give walls a physical body for collision detection
-        wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size)
+        wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size, center: wall.anchorPoint)
         wall.physicsBody?.isDynamic = true
         wall.physicsBody?.categoryBitMask = PhysicsCategory.wall
         wall.physicsBody?.collisionBitMask = PhysicsCategory.none
