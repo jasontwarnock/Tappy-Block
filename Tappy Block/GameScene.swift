@@ -8,72 +8,122 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+struct PhysicsCategory {
+    static let none : UInt32 = 0
+    static let all : UInt32 = UInt32.max
+    static let bird : UInt32 = 0b1
+    static let wall : UInt32 = 0b10
+}
+
+class GameScene: SKScene, SKPhysicsContactDelegate {
+   
     //Score
     var score = 0
     var hiScore = 0
     
     func updateScore(){
-        while true {
-            score+=2
-        }
+        score+=5
+        print(score)
     }
     
     func makeHUD() {
         let scoreLabel = SKLabelNode()
-        let hiScoreLabel = SKLabelNode()
-        
-        //scoreLabel.position = CGPoint(x: frame.minX-50, y: frame.minY-50)
+
         scoreLabel.position = CGPoint(x: frame.minX+50, y: frame.maxY-50)
         scoreLabel.color = UIColor.white
         scoreLabel.fontName = "Courier"
         scoreLabel.fontSize = 20
         scoreLabel.text = "Score: \(score)"
         addChild(scoreLabel)
-        //run(SKAction(updateScore()))
+        
+    }
+    //Score - Does Not Work Yet
+    
+    //Randon helper code for generating random numbers
+    func random() -> CGFloat {
+        return CGFloat(Float(arc4random()) / 0xFFFFFFFF)
+    }
+    func random(min: CGFloat, max: CGFloat) -> CGFloat {
+        return random() * (max - min) + min
+    }
+    //Random
+    
+    //Wall
+    func makeWall() {
+        //Define Wall and Movement
+        let wall = SKSpriteNode(color: UIColor.blue, size: CGSize(width: 30.0, height: random(min: 200.0, max: 500.0)))
+        let wallMove = SKAction.repeatForever(SKAction.moveBy(x: -20.0, y: 0.0, duration: 0.5))
+        
+        //Set Wall Starting Point
+        if random(min: 0, max: 2) > 1 {
+            wall.anchorPoint = CGPoint(x: 0.0, y: 1.0)
+            wall.position = CGPoint(x: frame.maxX, y: frame.maxY)
+        } else {
+            wall.anchorPoint = CGPoint.zero
+            wall.position = CGPoint(x: frame.maxX, y: frame.minY)
+        }
+        
+        //Give walls a physical body for collision detection
+        wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size)
+        wall.physicsBody?.isDynamic = true
+        wall.physicsBody?.categoryBitMask = PhysicsCategory.wall
+        wall.physicsBody?.collisionBitMask = PhysicsCategory.none
         
         
-        hiScoreLabel.position = CGPoint(x: frame.minX-200, y: frame.minY-50)
-        addChild(hiScoreLabel)
+        //Add Wall to Scene, move it, and update score
+        addChild(wall)
+        wall.run(wallMove)
+        updateScore()
     }
     
+    func makeWallsForever() {
+        run(SKAction.repeatForever(
+        SKAction.sequence([
+            SKAction.run(makeWall),
+            SKAction.wait(forDuration: 4.0, withRange: 1.5)
+            ])
+        ))
+    }
+    //Wall
+    
+    //Player
     let bird = SKSpriteNode(color: UIColor.red, size: CGSize(width: 20.0, height: 20.0))
     let birdFlap = SKAction.moveBy(x: 0.0, y: 50.0, duration: 0.5)
     let birdFall = SKAction.moveBy(x: 0.0, y: -50.0, duration: 0.5)
-    
-    let wall = SKSpriteNode(color: UIColor.blue, size: CGSize(width: 30.0, height: 300.0))
-    let wallMove = SKAction.repeatForever(SKAction.moveBy(x: -20.0, y: 0.0, duration: 0.5))
+    //Player
 
+   
+    //Main function for executing code
     override func didMove(to view: SKView) {
         
         makeHUD()
         
         bird.position = CGPoint(x: frame.minX+50, y: frame.midY)
-       // bird.physicsBody = SKPhysicsBody(circleOfRadius: bird.size.width/2)
+        //bird collision detection
+        bird.physicsBody = SKPhysicsBody(rectangleOf: bird.size)
+        bird.physicsBody?.affectedByGravity = false
+        bird.physicsBody?.categoryBitMask = PhysicsCategory.bird
+        bird.physicsBody?.collisionBitMask = PhysicsCategory.none
+        bird.physicsBody?.contactTestBitMask = PhysicsCategory.wall
+        
         addChild(bird)
-        
-        if bird.intersects(wall) {
-            bird.color = UIColor.yellow
-        }
-        
-        
-        wall.anchorPoint = CGPoint.zero
-        wall.position = CGPoint(x: frame.maxX, y: frame.minY)
-        addChild(wall)
-        wall.run(wallMove)
-        
-        
-    
-        
-       // physicsWorld.gravity = CGVector(dx: 0.0, dy: 0.2)
-       // physicsBody = SKPhysicsBody(edgeChainFrom: CGPath(frame))
-        
         bird.run(SKAction.repeatForever(birdFall))
+        
+        makeWallsForever()
+        
+       //Enable physics for collision, turn off gravity
+        physicsWorld.gravity = CGVector.zero
+        physicsWorld.contactDelegate = self
+        
+        
     }
+    //Main
     
+    //Touch code gets executed on touch
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         bird.run(birdFlap)
       
     }
+    //Touch
     
 }
