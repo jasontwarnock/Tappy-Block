@@ -8,6 +8,10 @@
 
 import SpriteKit
 
+
+//make a function array of type SKPhysicsContact ?
+var contactQueue = [SKPhysicsContact]()
+
 struct PhysicsCategory {
     static let none : UInt32 = 0
     static let all : UInt32 = UInt32.max
@@ -37,7 +41,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(scoreLabel)
         
     }
-    //Score - Does Not Work Yet
+    //Score - Does Not Refresh Yet
     
     //Randon helper code for generating random numbers
     func random() -> CGFloat {
@@ -52,16 +56,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func makeWall() {
         //Define Wall and Movement
         let wall = SKSpriteNode(color: UIColor.blue, size: CGSize(width: 30.0, height: random(min: 200.0, max: 500.0)))
+        wall.name = "aWall"
+        //test
+        print(wall.name!)
+        //test
         let wallMove = SKAction.repeatForever(SKAction.moveBy(x: -20.0, y: 0.0, duration: 0.5))
         
         //Set Wall Starting Point
         if random(min: 0, max: 2) > 1 {
-            wall.anchorPoint = CGPoint(x: 0.0, y: 1.0)
+            //wall.anchorPoint = CGPoint(x: 0.0, y: 1.0)
             wall.position = CGPoint(x: frame.maxX, y: frame.maxY)
             wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size, center: wall.anchorPoint)
 
         } else {
-            wall.anchorPoint = CGPoint.zero
+            //wall.anchorPoint = CGPoint.zero
             wall.position = CGPoint(x: frame.maxX, y: frame.minY)
             wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size, center: wall.anchorPoint)
         }
@@ -122,6 +130,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     //Main
     
+    
+    //Physics handling
+    func didBegin(_ contact: SKPhysicsContact) {
+        contactQueue.append(contact)
+    }
+    
+    func handle(_ contact: SKPhysicsContact) {
+        if contact.bodyA.node?.parent == nil || contact.bodyB.node?.parent == nil {
+            return
+        }
+        
+       
+        
+        let nodeNames = [contact.bodyA.node!.name!, contact.bodyB.node!.name!]
+        
+       // for names in nodeNames { print(names)}
+        print("collision detection on")
+        
+        if nodeNames.contains("bird") && nodeNames.contains("aWall") {
+            print("hit")
+        }
+    }
+    
+    
+    
+    //Physics
+    
     //Touch code gets executed on touch
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         bird.run(birdFlap)
@@ -129,4 +164,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     //Touch
     
+    func checkContact(forUpdate currentTime: CFTimeInterval) {
+        for contact in contactQueue {
+            handle(contact)
+            
+            if let index = contactQueue.index(of: contact){
+                contactQueue.remove(at: index)
+            }
+        }
+    }
+    
+    override func update(_ currentTime: TimeInterval) {
+        checkContact(forUpdate: currentTime)
+    }
 }
