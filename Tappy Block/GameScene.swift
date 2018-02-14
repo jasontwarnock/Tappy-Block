@@ -75,7 +75,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         //Give walls a physical body for collision detection
-        wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size, center: wall.anchorPoint)
+        wall.physicsBody = SKPhysicsBody(rectangleOf: wall.size, center: CGPoint(x: 1.0, y: 1.0))
         wall.physicsBody?.isDynamic = true
         wall.physicsBody?.categoryBitMask = PhysicsCategory.wall
         wall.physicsBody?.collisionBitMask = PhysicsCategory.none
@@ -99,6 +99,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     //Player
     let bird = SKSpriteNode(color: UIColor.red, size: CGSize(width: 20.0, height: 20.0))
+    //bird.name = "bird"
     let birdFlap = SKAction.moveBy(x: 0.0, y: 50.0, duration: 0.5)
     let birdFall = SKAction.moveBy(x: 0.0, y: -50.0, duration: 0.5)
     //Player
@@ -164,7 +165,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     //Touch
     
-    func checkContact(forUpdate currentTime: CFTimeInterval) {
+    func didBirdHitWall(forUpdate currentTime: CFTimeInterval) {
         for contact in contactQueue {
             handle(contact)
             
@@ -175,6 +176,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        checkContact(forUpdate: currentTime)
+        didBirdHitWall(forUpdate: currentTime)
     }
 }
